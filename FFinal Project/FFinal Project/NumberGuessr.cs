@@ -1,9 +1,30 @@
-﻿using System.Security.Cryptography;
+using System;
+using System.Data.Common;
+using System.Security.Cryptography;
+using System.Text.Json;
+using System.IO;
 
 namespace Final_Project
 {
     public class NumberGuessr
     {
+        static int s_guessCount = 0;
+
+
+        static string baseDirectory = AppContext.BaseDirectory;
+
+        private const string FileName = "Record.txt";
+
+
+        static readonly string s_recordPath = Path.Combine(baseDirectory, FileName);
+
+        public class Record()
+        {
+            public int Guesses { get; set; }
+            public string NickName { get; set; }
+            public DateTime CurrentTime { get; set; }
+        }
+
         public static void Start()
         {
             ///<summary>
@@ -42,7 +63,9 @@ namespace Final_Project
                         {
                             if (Input == RandomNum)
                             {
-                                Console.WriteLine("Correct! Good Try! Wanna try again? 1-Sure! 2-Next time!");
+                                Console.WriteLine("Correct! Good Try! Wanna try again? 1-Sure! 2-Next time! 3- Write record");
+                                Console.WriteLine($"Number of guesses: {s_guessCount}");
+                                Thread.Sleep(1000);
                                 int InputYN = int.Parse(Console.ReadLine());
                                 switch (InputYN)
                                 {
@@ -51,7 +74,11 @@ namespace Final_Project
                                     case 2:
                                         Console.Clear();
                                         Main_Menu.Menu();
-                                        return; 
+
+                                        return;
+                                    case 3:
+                                        RecordSer();
+                                        break;
                                     default:
                                         throw new Exception("Wrong Type!");
                                         return;
@@ -60,6 +87,8 @@ namespace Final_Project
                             else
                             {
                                 Console.WriteLine("Wrong! Try again!");
+                                s_guessCount++;
+                                Console.WriteLine(s_guessCount);
                                 continue;
                             }
                         }
@@ -75,6 +104,30 @@ namespace Final_Project
                     Main_Menu.Menu();
                     break;
             }
+        }
+
+        public static void RecordSer()
+        {
+            Console.WriteLine("Please write your name");
+            string? NickName = Console.ReadLine();
+            DateTime currenttime = DateTime.Now;
+
+            Console.WriteLine($"Name: {NickName}, Date of game: {currenttime}, Number of guesses: {s_guessCount}");
+            Record rec = new()
+            {
+                Guesses = s_guessCount,
+                NickName = NickName,
+                CurrentTime = currenttime
+            };
+
+            string jsonString = JsonSerializer.Serialize(rec);
+
+
+            using (StreamWriter writer = new StreamWriter(s_recordPath))
+            {
+                writer.WriteLine(jsonString);
+            }
+
         }
     }
 }
